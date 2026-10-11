@@ -95,7 +95,7 @@ router.put('/:id', async (req, res) => {
     const updatedTask = await Task.findByIdAndUpdate(
       id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, returnDocument: 'after', runValidators: true }
     );
 
     if (!updatedTask) {
