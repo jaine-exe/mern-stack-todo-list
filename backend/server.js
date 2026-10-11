@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
+const taskRoutes = require('./routes/taskRoutes');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -24,6 +25,9 @@ app.use(
 
 // A1: express.json() middleware to parse JSON request bodies
 app.use(express.json());
+
+// API Routes
+app.use('/api/tasks', taskRoutes);
 
 // Health check / root route
 app.get('/', (req, res) => {
