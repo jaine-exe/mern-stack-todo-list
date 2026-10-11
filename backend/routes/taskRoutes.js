@@ -55,4 +55,89 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * @route   PUT /api/tasks/:id
+ * @desc    Update a task (mark complete/incomplete or edit the title)
+ * @access  Public
+ * @note    A5: convert title with String(), trim it, and reject empty title with 400
+ */
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const updates = {};
+
+    // A5: If title is provided, convert with String(), trim it, and reject empty title with 400
+    if (req.body.title !== undefined) {
+      const trimmedTitle = String(req.body.title).trim();
+      if (trimmedTitle.length === 0) {
+        return res.status(400).json({ error: 'Task title cannot be empty' });
+      }
+      updates.title = trimmedTitle;
+    }
+
+    // Handle completed boolean update
+    if (req.body.completed !== undefined) {
+      updates.completed = Boolean(req.body.completed);
+    }
+
+    // Verify at least one field is being updated
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields provided for update' });
+    }
+
+    // Find and update the task
+    const updatedTask = await Task.findByIdAndUpdate(
+      id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error('Error updating task:', error);
+    res.status(500).json({ error: 'Server error while updating task' });
+  }
+});
+
+/**
+ * @route   DELETE /api/tasks/:id
+ * @desc    Delete a task
+ * @access  Public
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // Find and delete the task
+    const deletedTask = await Task.findByIdAndDelete(id);
+
+    if (!deletedTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.status(200).json({
+      message: 'Task deleted successfully',
+      task: deletedTask,
+    });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({ error: 'Server error while deleting task' });
+  }
+});
+
 module.exports = router;
